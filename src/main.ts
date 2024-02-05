@@ -21,7 +21,7 @@ async function fetchPreviousComment(
   });
 
   const sizeLimitComment = commentList.data.find((comment) =>
-    comment.body.startsWith(SIZE_LIMIT_HEADING),
+    comment.body?.startsWith(SIZE_LIMIT_HEADING),
   );
   return !sizeLimitComment ? null : sizeLimitComment;
 }
@@ -52,7 +52,7 @@ async function run() {
     const limit = new SizeLimit();
 
     const { status, output } = await term.execSizeLimit(
-      null,
+      undefined,
       skipStep,
       buildScript,
       cleanScript,
@@ -63,7 +63,7 @@ async function run() {
     );
     const { output: baseOutput } = await term.execSizeLimit(
       pr.base.ref,
-      null,
+      undefined,
       buildScript,
       cleanScript,
       windowsVerbatimArguments,
@@ -128,7 +128,7 @@ async function run() {
       setFailed("Size limit has been exceeded.");
     }
   } catch (error) {
-    setFailed(error.message);
+    setFailed(error instanceof Error ? error.message : `${error}`);
   }
 }
 

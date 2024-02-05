@@ -2,12 +2,12 @@ import { exec } from "@actions/exec";
 import hasYarn from "has-yarn";
 import hasPNPM from "has-pnpm";
 
-import process from 'node:process';
-import path from 'node:path';
-import fs from 'node:fs';
+import process from "node:process";
+import path from "node:path";
+import fs from "node:fs";
 
 function hasBun(cwd = process.cwd()) {
-	return fs.existsSync(path.resolve(cwd, 'bun.lockb'));
+  return fs.existsSync(path.resolve(cwd, "bun.lockb"));
 }
 
 const INSTALL_STEP = "install";
@@ -22,7 +22,13 @@ class Term {
    * @returns The detected package manager in use, one of `yarn`, `pnpm`, `npm`, `bun`
    */
   getPackageManager(directory?: string): string {
-    return hasYarn(directory) ? "yarn" : hasPNPM(directory) ? "pnpm" : hasBun(directory) ? "bun" : "npm";
+    return hasYarn(directory)
+      ? "yarn"
+      : hasPNPM(directory)
+        ? "pnpm"
+        : hasBun(directory)
+          ? "bun"
+          : "npm";
   }
 
   async execSizeLimit(
@@ -33,7 +39,7 @@ class Term {
     windowsVerbatimArguments?: boolean,
     directory?: string,
     script?: string,
-    packageManager?: string
+    packageManager?: string,
   ): Promise<{ status: number; output: string }> {
     const manager = packageManager || this.getPackageManager(directory);
     let output = "";
@@ -42,7 +48,10 @@ class Term {
       try {
         await exec(`git fetch origin ${branch} --depth=1`);
       } catch (error) {
-        console.log("Fetch failed", error.message);
+        console.log(
+          "Fetch failed",
+          error instanceof Error ? error.message : error,
+        );
       }
 
       await exec(`git checkout -f ${branch}`);
@@ -50,15 +59,19 @@ class Term {
 
     if (skipStep !== INSTALL_STEP && skipStep !== BUILD_STEP) {
       await exec(`${manager} install`, [], {
-        cwd: directory
+        cwd: directory,
       });
     }
 
     if (skipStep !== BUILD_STEP) {
       const script = buildScript || "build";
       await exec(`${manager} run ${script}`, [], {
-        cwd: directory
+        cwd: directory,
       });
+    }
+
+    if (!script) {
+      throw new Error("No script provided");
     }
 
     const status = await exec(script, [], {
@@ -67,20 +80,20 @@ class Term {
       listeners: {
         stdout: (data: Buffer) => {
           output += data.toString();
-        }
+        },
       },
-      cwd: directory
+      cwd: directory,
     });
 
     if (cleanScript) {
       await exec(`${manager} run ${cleanScript}`, [], {
-        cwd: directory
+        cwd: directory,
       });
     }
 
     return {
       status,
-      output
+      output,
     };
   }
 }

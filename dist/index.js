@@ -30359,7 +30359,7 @@ const EmptyResult = {
     size: 0,
     running: 0,
     loading: 0,
-    total: 0
+    total: 0,
 };
 class SizeLimit {
     formatBytes(size) {
@@ -30421,16 +30421,17 @@ class SizeLimit {
         }
         return [
             name,
-            this.formatLine(this.formatBytes(current.size), this.formatChange(base.size, current.size))
+            this.formatLine(this.formatBytes(current.size), this.formatChange(base.size, current.size)),
         ];
     }
     formatTimeResult(name, base, current) {
+        var _a, _b, _c;
         return [
             name,
             this.formatLine(this.formatBytes(current.size), this.formatChange(base.size, current.size)),
-            this.formatLine(this.formatTime(current.loading), this.formatChange(base.loading, current.loading)),
-            this.formatLine(this.formatTime(current.running), this.formatChange(base.running, current.running)),
-            this.formatTime(current.total)
+            this.formatLine(this.formatTime((_a = current.loading) !== null && _a !== void 0 ? _a : 0), this.formatChange(base.loading, current.loading)),
+            this.formatLine(this.formatTime((_b = current.running) !== null && _b !== void 0 ? _b : 0), this.formatChange(base.running, current.running)),
+            this.formatTime((_c = current.total) !== null && _c !== void 0 ? _c : 0),
         ];
     }
     parseResults(output) {
@@ -30443,7 +30444,7 @@ class SizeLimit {
                 time = {
                     running,
                     loading,
-                    total: loading + running
+                    total: loading + running,
                 };
             }
             return Object.assign(Object.assign({}, current), { [result.name]: Object.assign({ name: result.name, size: +result.size }, time) });
@@ -30464,10 +30465,12 @@ class SizeLimit {
             }
             return this.formatTimeResult(name, baseResult, currentResult);
         })
-            .filter(Boolean);
+            .filter((r) => !!r);
         return [header, ...fields];
     }
     parseMargin(sizeMargin) {
+        if (!sizeMargin)
+            return undefined;
         if (sizeMargin === "non-zero") {
             return { type: "non-zero" };
         }
@@ -30479,7 +30482,7 @@ class SizeLimit {
             }
             return {
                 type: "pct",
-                value: parsed
+                value: parsed,
             };
         }
         // assume bytes
@@ -30489,7 +30492,7 @@ class SizeLimit {
         }
         return {
             type: "size",
-            value: parsed
+            value: parsed,
         };
     }
 }
@@ -30499,7 +30502,7 @@ SizeLimit.TIME_RESULTS_HEADER = [
     "Size",
     "Loading time (3g)",
     "Running time (snapdragon)",
-    "Total time"
+    "Total time",
 ];
 exports["default"] = SizeLimit;
 
@@ -30531,7 +30534,7 @@ const node_process_1 = __importDefault(__nccwpck_require__(7742));
 const node_path_1 = __importDefault(__nccwpck_require__(9411));
 const node_fs_1 = __importDefault(__nccwpck_require__(7561));
 function hasBun(cwd = node_process_1.default.cwd()) {
-    return node_fs_1.default.existsSync(node_path_1.default.resolve(cwd, 'bun.lockb'));
+    return node_fs_1.default.existsSync(node_path_1.default.resolve(cwd, "bun.lockb"));
 }
 const INSTALL_STEP = "install";
 const BUILD_STEP = "build";
@@ -30544,7 +30547,13 @@ class Term {
      * @returns The detected package manager in use, one of `yarn`, `pnpm`, `npm`, `bun`
      */
     getPackageManager(directory) {
-        return (0, has_yarn_1.default)(directory) ? "yarn" : (0, has_pnpm_1.default)(directory) ? "pnpm" : hasBun(directory) ? "bun" : "npm";
+        return (0, has_yarn_1.default)(directory)
+            ? "yarn"
+            : (0, has_pnpm_1.default)(directory)
+                ? "pnpm"
+                : hasBun(directory)
+                    ? "bun"
+                    : "npm";
     }
     execSizeLimit(branch, skipStep, buildScript, cleanScript, windowsVerbatimArguments, directory, script, packageManager) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -30555,20 +30564,23 @@ class Term {
                     yield (0, exec_1.exec)(`git fetch origin ${branch} --depth=1`);
                 }
                 catch (error) {
-                    console.log("Fetch failed", error.message);
+                    console.log("Fetch failed", error instanceof Error ? error.message : error);
                 }
                 yield (0, exec_1.exec)(`git checkout -f ${branch}`);
             }
             if (skipStep !== INSTALL_STEP && skipStep !== BUILD_STEP) {
                 yield (0, exec_1.exec)(`${manager} install`, [], {
-                    cwd: directory
+                    cwd: directory,
                 });
             }
             if (skipStep !== BUILD_STEP) {
                 const script = buildScript || "build";
                 yield (0, exec_1.exec)(`${manager} run ${script}`, [], {
-                    cwd: directory
+                    cwd: directory,
                 });
+            }
+            if (!script) {
+                throw new Error("No script provided");
             }
             const status = yield (0, exec_1.exec)(script, [], {
                 windowsVerbatimArguments,
@@ -30576,18 +30588,18 @@ class Term {
                 listeners: {
                     stdout: (data) => {
                         output += data.toString();
-                    }
+                    },
                 },
-                cwd: directory
+                cwd: directory,
             });
             if (cleanScript) {
                 yield (0, exec_1.exec)(`${manager} run ${cleanScript}`, [], {
-                    cwd: directory
+                    cwd: directory,
                 });
             }
             return {
                 status,
-                output
+                output,
             };
         });
     }
@@ -30627,7 +30639,7 @@ function fetchPreviousComment(octokit, repo, pr) {
         const commentList = yield octokit.rest.issues.listComments(Object.assign(Object.assign({}, repo), { 
             // eslint-disable-next-line camelcase
             issue_number: pr.number }));
-        const sizeLimitComment = commentList.data.find((comment) => comment.body.startsWith(SIZE_LIMIT_HEADING));
+        const sizeLimitComment = commentList.data.find((comment) => { var _a; return (_a = comment.body) === null || _a === void 0 ? void 0 : _a.startsWith(SIZE_LIMIT_HEADING); });
         return !sizeLimitComment ? null : sizeLimitComment;
     });
 }
@@ -30651,8 +30663,8 @@ function run() {
             const octokit = (0, github_1.getOctokit)(token);
             const term = new Term_1.default();
             const limit = new SizeLimit_1.default();
-            const { status, output } = yield term.execSizeLimit(null, skipStep, buildScript, cleanScript, windowsVerbatimArguments, directory, script, packageManager);
-            const { output: baseOutput } = yield term.execSizeLimit(pr.base.ref, null, buildScript, cleanScript, windowsVerbatimArguments, directory, script, packageManager);
+            const { status, output } = yield term.execSizeLimit(undefined, skipStep, buildScript, cleanScript, windowsVerbatimArguments, directory, script, packageManager);
+            const { output: baseOutput } = yield term.execSizeLimit(pr.base.ref, undefined, buildScript, cleanScript, windowsVerbatimArguments, directory, script, packageManager);
             let base;
             let current;
             try {
@@ -30695,7 +30707,7 @@ function run() {
             }
         }
         catch (error) {
-            (0, core_1.setFailed)(error.message);
+            (0, core_1.setFailed)(error instanceof Error ? error.message : `${error}`);
         }
     });
 }

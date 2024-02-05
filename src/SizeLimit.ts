@@ -29,7 +29,7 @@ const EmptyResult = {
   size: 0,
   running: 0,
   loading: 0,
-  total: 0
+  total: 0,
 };
 
 class SizeLimit {
@@ -40,7 +40,7 @@ class SizeLimit {
     "Size",
     "Loading time (3g)",
     "Running time (snapdragon)",
-    "Total time"
+    "Total time",
   ];
 
   private formatBytes(size: number): string {
@@ -90,7 +90,7 @@ class SizeLimit {
     name: string,
     base: IResult,
     current: IResult,
-    options: FormatOptions = {}
+    options: FormatOptions = {},
   ): Array<string> | null {
     if (options.sizeMargin !== undefined) {
       switch (options.sizeMargin.type) {
@@ -120,31 +120,31 @@ class SizeLimit {
       name,
       this.formatLine(
         this.formatBytes(current.size),
-        this.formatChange(base.size, current.size)
-      )
+        this.formatChange(base.size, current.size),
+      ),
     ];
   }
 
   private formatTimeResult(
     name: string,
     base: IResult,
-    current: IResult
+    current: IResult,
   ): Array<string> {
     return [
       name,
       this.formatLine(
         this.formatBytes(current.size),
-        this.formatChange(base.size, current.size)
+        this.formatChange(base.size, current.size),
       ),
       this.formatLine(
-        this.formatTime(current.loading),
-        this.formatChange(base.loading, current.loading)
+        this.formatTime(current.loading ?? 0),
+        this.formatChange(base.loading, current.loading),
       ),
       this.formatLine(
-        this.formatTime(current.running),
-        this.formatChange(base.running, current.running)
+        this.formatTime(current.running ?? 0),
+        this.formatChange(base.running, current.running),
       ),
-      this.formatTime(current.total)
+      this.formatTime(current.total ?? 0),
     ];
   }
 
@@ -162,7 +162,7 @@ class SizeLimit {
           time = {
             running,
             loading,
-            total: loading + running
+            total: loading + running,
           };
         }
 
@@ -171,22 +171,22 @@ class SizeLimit {
           [result.name]: {
             name: result.name,
             size: +result.size,
-            ...time
-          }
+            ...time,
+          },
         };
       },
-      {}
+      {},
     );
   }
 
   formatResults(
     base: { [name: string]: IResult },
     current: { [name: string]: IResult },
-    options: FormatOptions = {}
+    options: FormatOptions = {},
   ): Array<Array<string>> {
     const names = [...new Set([...Object.keys(base), ...Object.keys(current)])];
     const isSize = names.some(
-      (name: string) => current[name] && current[name].total === undefined
+      (name: string) => current[name] && current[name].total === undefined,
     );
     const header = isSize
       ? SizeLimit.SIZE_RESULTS_HEADER
@@ -201,17 +201,18 @@ class SizeLimit {
             name,
             baseResult,
             currentResult,
-            options
+            options,
           );
         }
         return this.formatTimeResult(name, baseResult, currentResult);
       })
-      .filter(Boolean);
+      .filter((r): r is string[] => !!r);
 
     return [header, ...fields];
   }
 
-  parseMargin(sizeMargin: string): Margin {
+  parseMargin(sizeMargin: string): Margin | undefined {
+    if (!sizeMargin) return undefined;
     if (sizeMargin === "non-zero") {
       return { type: "non-zero" };
     }
@@ -220,12 +221,12 @@ class SizeLimit {
       const parsed = parseFloat(sliced);
       if (Number.isNaN(parsed)) {
         throw new Error(
-          `Invalid size margin: ${sizeMargin}. Must be a number, with or without a % sign, or "non-zero"`
+          `Invalid size margin: ${sizeMargin}. Must be a number, with or without a % sign, or "non-zero"`,
         );
       }
       return {
         type: "pct",
-        value: parsed
+        value: parsed,
       };
     }
 
@@ -233,13 +234,13 @@ class SizeLimit {
     const parsed = parseFloat(sizeMargin);
     if (Number.isNaN(parsed)) {
       throw new Error(
-        `Invalid size margin: ${sizeMargin}. Must be a number, with or without a % sign, or "non-zero"`
+        `Invalid size margin: ${sizeMargin}. Must be a number, with or without a % sign, or "non-zero"`,
       );
     }
 
     return {
       type: "size",
-      value: parsed
+      value: parsed,
     };
   }
 }
