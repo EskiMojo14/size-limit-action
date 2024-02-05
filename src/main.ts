@@ -1,29 +1,27 @@
 import { getInput, setFailed } from "@actions/core";
-import { context, GitHub } from "@actions/github";
-// @ts-ignore
-import table from "markdown-table";
+import { context, getOctokit } from "@actions/github";
+import { markdownTable } from "markdown-table";
 import Term from "./Term";
 import SizeLimit from "./SizeLimit";
+
+type GitHub = ReturnType<typeof getOctokit>;
 
 const SIZE_LIMIT_HEADING = `## size-limit report 📦 `;
 
 async function fetchPreviousComment(
   octokit: GitHub,
   repo: { owner: string; repo: string },
-  pr: { number: number }
+  pr: { number: number },
 ) {
   // TODO: replace with octokit.issues.listComments when upgraded to v17
-  const commentList = await octokit.paginate(
-    "GET /repos/:owner/:repo/issues/:issue_number/comments",
-    {
-      ...repo,
-      // eslint-disable-next-line camelcase
-      issue_number: pr.number
-    }
-  );
+  const commentList = await octokit.rest.issues.listComments({
+    ...repo,
+    // eslint-disable-next-line camelcase
+    issue_number: pr.number,
+  });
 
-  const sizeLimitComment = commentList.find(comment =>
-    comment.body.startsWith(SIZE_LIMIT_HEADING)
+  const sizeLimitComment = commentList.data.find((comment) =>
+    comment.body.startsWith(SIZE_LIMIT_HEADING),
   );
   return !sizeLimitComment ? null : sizeLimitComment;
 }
@@ -35,7 +33,7 @@ async function run() {
 
     if (!pr) {
       throw new Error(
-        "No PR found. Only pull_request workflows are supported."
+        "No PR found. Only pull_request workflows are supported.",
       );
     }
 
@@ -47,9 +45,9 @@ async function run() {
     const packageManager = getInput("package_manager");
     const directory = getInput("directory") || process.cwd();
     const windowsVerbatimArguments =
-      getInput("windows_verbatim_arguments") === "true" ? true : false;
+      getInput("windows_verbatim_arguments") === "true";
     const sizeMargin = getInput("size_margin");
-    const octokit = new GitHub(token);
+    const octokit = getOctokit(token);
     const term = new Term();
     const limit = new SizeLimit();
 
@@ -61,7 +59,7 @@ async function run() {
       windowsVerbatimArguments,
       directory,
       script,
-      packageManager
+      packageManager,
     );
     const { output: baseOutput } = await term.execSizeLimit(
       pr.base.ref,
@@ -71,7 +69,7 @@ async function run() {
       windowsVerbatimArguments,
       directory,
       script,
-      packageManager
+      packageManager,
     );
 
     let base;
@@ -82,46 +80,46 @@ async function run() {
       current = limit.parseResults(output);
     } catch (error) {
       console.log(
-        "Error parsing size-limit output. The output should be a json."
+        "Error parsing size-limit output. The output should be a json.",
       );
       throw error;
     }
 
     const body = [
       SIZE_LIMIT_HEADING,
-      table(
+      markdownTable(
         limit.formatResults(base, current, {
-          sizeMargin: sizeMargin ? limit.parseMargin(sizeMargin) : undefined
-        })
-      )
+          sizeMargin: sizeMargin ? limit.parseMargin(sizeMargin) : undefined,
+        }),
+      ),
     ].join("\r\n");
 
     const sizeLimitComment = await fetchPreviousComment(octokit, repo, pr);
 
     if (!sizeLimitComment) {
       try {
-        await octokit.issues.createComment({
+        await octokit.rest.issues.createComment({
           ...repo,
           // eslint-disable-next-line camelcase
           issue_number: pr.number,
-          body
+          body,
         });
       } catch (error) {
         console.log(
-          "Error creating comment. This can happen for PR's originating from a fork without write permissions."
+          "Error creating comment. This can happen for PR's originating from a fork without write permissions.",
         );
       }
     } else {
       try {
-        await octokit.issues.updateComment({
+        await octokit.rest.issues.updateComment({
           ...repo,
           // eslint-disable-next-line camelcase
           comment_id: sizeLimitComment.id,
-          body
+          body,
         });
       } catch (error) {
         console.log(
-          "Error updating comment. This can happen for PR's originating from a fork without write permissions."
+          "Error updating comment. This can happen for PR's originating from a fork without write permissions.",
         );
       }
     }
