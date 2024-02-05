@@ -152,8 +152,8 @@ describe("SizeLimit", () => {
   });
   test("should throw if the margin is invalid", () => {
     const limit = new SizeLimit();
-    expect(() => limit.parseMargin("ten")).toThrowErrorMatchingInlineSnapshot(
-      `"Invalid size margin: ten. Must be a number, with or without a % sign, or \\"non-zero\\""`,
+    expect(() => limit.parseMargin("ten")).toThrow(
+      `Invalid size margin: ten. Must be a number, with or without a % sign, or "non-zero"`,
     );
   });
 
