@@ -9,6 +9,21 @@ interface IResult {
   total?: number;
 }
 
+type Margin =
+  | { type: "non-zero" }
+  | {
+      type: "size";
+      value: number;
+    }
+  | {
+      type: "pct";
+      value: number;
+    };
+
+interface FormatOptions {
+  sizeMargin?: Margin;
+}
+
 const EmptyResult = {
   name: "-",
   size: 0,
@@ -40,12 +55,19 @@ class SizeLimit {
     return `${Math.ceil(seconds * 1000)} ms`;
   }
 
+  private getChange(base: number = 0, current: number = 0): number {
+    if (base === 0) {
+      return 100;
+    }
+    return ((current - base) / base) * 100;
+  }
+
   private formatChange(base: number = 0, current: number = 0): string {
     if (base === 0) {
       return "+100% 🔺";
     }
 
-    const value = ((current - base) / base) * 100;
+    const value = this.getChange(base, current);
     const formatted =
       (Math.sign(value) * Math.ceil(Math.abs(value) * 100)) / 100;
 
@@ -67,8 +89,33 @@ class SizeLimit {
   private formatSizeResult(
     name: string,
     base: IResult,
-    current: IResult
-  ): Array<string> {
+    current: IResult,
+    options: FormatOptions = {}
+  ): Array<string> | null {
+    if (options.sizeMargin !== undefined) {
+      switch (options.sizeMargin.type) {
+        case "non-zero": {
+          const rawChange = current.size - base.size;
+          if (rawChange === 0) {
+            return null;
+          }
+          break;
+        }
+        case "size": {
+          const rawChange = current.size - base.size;
+          if (Math.abs(rawChange) < options.sizeMargin.value) {
+            return null;
+          }
+          break;
+        }
+        case "pct": {
+          const pctChange = this.getChange(base.size, current.size);
+          if (Math.abs(pctChange) < options.sizeMargin.value / 100) {
+            return null;
+          }
+        }
+      }
+    }
     return [
       name,
       this.formatLine(
@@ -134,7 +181,8 @@ class SizeLimit {
 
   formatResults(
     base: { [name: string]: IResult },
-    current: { [name: string]: IResult }
+    current: { [name: string]: IResult },
+    options: FormatOptions = {}
   ): Array<Array<string>> {
     const names = [...new Set([...Object.keys(base), ...Object.keys(current)])];
     const isSize = names.some(
@@ -143,17 +191,56 @@ class SizeLimit {
     const header = isSize
       ? SizeLimit.SIZE_RESULTS_HEADER
       : SizeLimit.TIME_RESULTS_HEADER;
-    const fields = names.map((name: string) => {
-      const baseResult = base[name] || EmptyResult;
-      const currentResult = current[name] || EmptyResult;
+    const fields = names
+      .map((name: string) => {
+        const baseResult = base[name] || EmptyResult;
+        const currentResult = current[name] || EmptyResult;
 
-      if (isSize) {
-        return this.formatSizeResult(name, baseResult, currentResult);
-      }
-      return this.formatTimeResult(name, baseResult, currentResult);
-    });
+        if (isSize) {
+          return this.formatSizeResult(
+            name,
+            baseResult,
+            currentResult,
+            options
+          );
+        }
+        return this.formatTimeResult(name, baseResult, currentResult);
+      })
+      .filter(Boolean);
 
     return [header, ...fields];
+  }
+
+  parseMargin(sizeMargin: string): Margin {
+    if (sizeMargin === "non-zero") {
+      return { type: "non-zero" };
+    }
+    if (sizeMargin.endsWith("%")) {
+      const sliced = sizeMargin.slice(0, -1);
+      const parsed = parseFloat(sliced);
+      if (Number.isNaN(parsed)) {
+        throw new Error(
+          `Invalid size margin: ${sizeMargin}. Must be a number, with or without a % sign, or "non-zero"`
+        );
+      }
+      return {
+        type: "pct",
+        value: parsed
+      };
+    }
+
+    // assume bytes
+    const parsed = parseFloat(sizeMargin);
+    if (Number.isNaN(parsed)) {
+      throw new Error(
+        `Invalid size margin: ${sizeMargin}. Must be a number, with or without a % sign, or "non-zero"`
+      );
+    }
+
+    return {
+      type: "size",
+      value: parsed
+    };
   }
 }
 export default SizeLimit;

@@ -48,6 +48,7 @@ async function run() {
     const directory = getInput("directory") || process.cwd();
     const windowsVerbatimArguments =
       getInput("windows_verbatim_arguments") === "true" ? true : false;
+    const sizeMargin = getInput("size_margin");
     const octokit = new GitHub(token);
     const term = new Term();
     const limit = new SizeLimit();
@@ -88,7 +89,11 @@ async function run() {
 
     const body = [
       SIZE_LIMIT_HEADING,
-      table(limit.formatResults(base, current))
+      table(
+        limit.formatResults(base, current, {
+          sizeMargin: sizeMargin ? limit.parseMargin(sizeMargin) : undefined
+        })
+      )
     ].join("\r\n");
 
     const sizeLimitComment = await fetchPreviousComment(octokit, repo, pr);
