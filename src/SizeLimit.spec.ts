@@ -149,6 +149,7 @@ describe("SizeLimit", () => {
     expect(limit.parseMargin("10%")).toEqual({ type: "pct", value: 10 });
     expect(limit.parseMargin("10")).toEqual({ type: "size", value: 10 });
     expect(limit.parseMargin("non-zero")).toEqual({ type: "non-zero" });
+    expect(limit.parseMargin("")).toBeUndefined();
   });
   test("should throw if the margin is invalid", () => {
     const limit = new SizeLimit();
