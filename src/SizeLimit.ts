@@ -12,11 +12,7 @@ interface IResult {
 type Margin =
   | { type: "non-zero" }
   | {
-      type: "size";
-      value: number;
-    }
-  | {
-      type: "pct";
+      type: "size" | "pct";
       value: number;
     };
 
