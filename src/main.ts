@@ -106,8 +106,9 @@ async function run() {
         });
       } catch (error) {
         console.log(
-          "Error creating comment. This can happen for PR's originating from a fork without write permissions.",
+          "Error creating comment. This can happen for PR's originating from a fork without write permissions. Logging to console instead:",
         );
+        console.log(body);
       }
     } else {
       try {
@@ -119,8 +120,9 @@ async function run() {
         });
       } catch (error) {
         console.log(
-          "Error updating comment. This can happen for PR's originating from a fork without write permissions.",
+          "Error updating comment. This can happen for PR's originating from a fork without write permissions. Logging to console instead:",
         );
+        console.log(body);
       }
     }
 
