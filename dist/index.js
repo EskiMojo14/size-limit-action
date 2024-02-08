@@ -30689,7 +30689,8 @@ function run() {
                         issue_number: pr.number, body }));
                 }
                 catch (error) {
-                    console.log("Error creating comment. This can happen for PR's originating from a fork without write permissions.");
+                    console.log("Error creating comment. This can happen for PR's originating from a fork without write permissions. Logging to console instead:");
+                    console.log(body);
                 }
             }
             else {
@@ -30699,7 +30700,8 @@ function run() {
                         comment_id: sizeLimitComment.id, body }));
                 }
                 catch (error) {
-                    console.log("Error updating comment. This can happen for PR's originating from a fork without write permissions.");
+                    console.log("Error updating comment. This can happen for PR's originating from a fork without write permissions. Logging to console instead:");
+                    console.log(body);
                 }
             }
             if (status > 0) {
