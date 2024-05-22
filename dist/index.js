@@ -30528,13 +30528,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const exec_1 = __nccwpck_require__(1514);
-const has_yarn_1 = __importDefault(__nccwpck_require__(5104));
+const has_yarn_1 = __importDefault(__nccwpck_require__(3472));
 const has_pnpm_1 = __importDefault(__nccwpck_require__(3974));
-const node_process_1 = __importDefault(__nccwpck_require__(7742));
-const node_path_1 = __importDefault(__nccwpck_require__(9411));
-const node_fs_1 = __importDefault(__nccwpck_require__(7561));
-function hasBun(cwd = node_process_1.default.cwd()) {
-    return node_fs_1.default.existsSync(node_path_1.default.resolve(cwd, "bun.lockb"));
+const process_1 = __importDefault(__nccwpck_require__(7282));
+const path_1 = __importDefault(__nccwpck_require__(1017));
+const fs_1 = __importDefault(__nccwpck_require__(7147));
+function hasBun(cwd = process_1.default.cwd()) {
+    return fs_1.default.existsSync(path_1.default.resolve(cwd, "bun.lockb"));
 }
 const INSTALL_STEP = "install";
 const BUILD_STEP = "build";
@@ -30830,30 +30830,6 @@ module.exports = require("node:events");
 
 /***/ }),
 
-/***/ 7561:
-/***/ ((module) => {
-
-"use strict";
-module.exports = require("node:fs");
-
-/***/ }),
-
-/***/ 9411:
-/***/ ((module) => {
-
-"use strict";
-module.exports = require("node:path");
-
-/***/ }),
-
-/***/ 7742:
-/***/ ((module) => {
-
-"use strict";
-module.exports = require("node:process");
-
-/***/ }),
-
 /***/ 4492:
 /***/ ((module) => {
 
@@ -30891,6 +30867,14 @@ module.exports = require("path");
 
 "use strict";
 module.exports = require("perf_hooks");
+
+/***/ }),
+
+/***/ 7282:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("process");
 
 /***/ }),
 
@@ -32601,23 +32585,31 @@ module.exports = parseParams
 
 /***/ }),
 
-/***/ 5104:
+/***/ 3472:
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __nccwpck_require__) => {
 
 "use strict";
+// ESM COMPAT FLAG
 __nccwpck_require__.r(__webpack_exports__);
-/* harmony export */ __nccwpck_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (/* binding */ hasYarn)
-/* harmony export */ });
-/* harmony import */ var node_process__WEBPACK_IMPORTED_MODULE_0__ = __nccwpck_require__(7742);
-/* harmony import */ var node_path__WEBPACK_IMPORTED_MODULE_1__ = __nccwpck_require__(9411);
-/* harmony import */ var node_fs__WEBPACK_IMPORTED_MODULE_2__ = __nccwpck_require__(7561);
+
+// EXPORTS
+__nccwpck_require__.d(__webpack_exports__, {
+  "default": () => (/* binding */ hasYarn)
+});
+
+;// CONCATENATED MODULE: external "node:process"
+const external_node_process_namespaceObject = require("node:process");
+;// CONCATENATED MODULE: external "node:path"
+const external_node_path_namespaceObject = require("node:path");
+;// CONCATENATED MODULE: external "node:fs"
+const external_node_fs_namespaceObject = require("node:fs");
+;// CONCATENATED MODULE: ./node_modules/has-yarn/index.js
 
 
 
 
-function hasYarn(cwd = node_process__WEBPACK_IMPORTED_MODULE_0__.cwd()) {
-	return node_fs__WEBPACK_IMPORTED_MODULE_2__.existsSync(node_path__WEBPACK_IMPORTED_MODULE_1__.resolve(cwd, 'yarn.lock'));
+function hasYarn(cwd = external_node_process_namespaceObject.cwd()) {
+	return external_node_fs_namespaceObject.existsSync(external_node_path_namespaceObject.resolve(cwd, 'yarn.lock'));
 }
 
 
